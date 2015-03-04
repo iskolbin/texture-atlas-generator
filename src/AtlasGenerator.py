@@ -41,29 +41,38 @@ from util.utils import get_atlas_path
 from util.utils import clear_atlas_dir
 from util.utils import get_color
 from packing_algorithms.texture_packer import PackerError
-from math.math import next_power_of_two
+from xmath.math import next_power_of_two
 
 
 def pack_atlas(args, dirPath, curr_size):
-    texture_packer = get_packer(args['packing_algorithm'], curr_size, args['maxrects_heuristic'])
-    childDirs = os.listdir(dirPath)
+    texture_packer = get_packer(args['packing_algorithm'], curr_size, args['maxrects_heuristic'], args['padding'])
 
+    pad = int(args['padding'])
     index = 0
     imagesList = []
+    dirList = [dirPath]
 
     # Open all images in the directory and add to the packer input data structure.
-    for currPath in childDirs:
-        file_path = os.path.join(dirPath, currPath)
-        if (currPath.startswith(".") or os.path.isdir(file_path)):
-            continue
+    while len(dirList) > 0:
+        dirPath = dirList.pop()
+        childDirs = os.listdir(dirPath)
 
-        try:
-            img = Image.open(file_path)
-            texture_packer.add_texture(img.size[0], img.size[1], currPath)
-            imagesList.append((currPath, img))
-            index += 1
-        except (IOError):
-            print "ERROR: PIL failed to open file: ", file_path
+        for currPath in childDirs:
+            file_path = os.path.join(dirPath, currPath)
+            if currPath.startswith("."):
+                continue
+            
+            if os.path.isdir(file_path):
+                dirList.append( file_path )
+                continue
+
+            try:
+                img = Image.open(file_path)
+                texture_packer.add_texture(img.size[0]+pad, img.size[1]+pad, currPath)
+                imagesList.append((currPath, img))
+                index += 1
+            except (IOError):
+                print "ERROR: PIL failed to open file: ", file_path
 
     # Pack the textures into an atlas as efficiently as possible.
     packResult = texture_packer.pack_textures(True, True)
@@ -93,7 +102,12 @@ def create_atlas(texMode, dirPath, atlasPath, dirName, args):
     borderSize = 1
     atlas_name = '%s.%s' % (dirName, args['atlas_type'])
     atlas_data = AtlasData(name=dirName, width=packResult[0], height=packResult[1], color_mode=texMode, file_type=args['atlas_type'], border=borderSize)
+    pad = int(args['padding'])
     for tex in texture_packer.texArr:
+        tex.width = tex.width - pad
+        tex.height = tex.height - pad
+        tex.longestEdge = tex.longestEdge - pad
+        tex.area = tex.width*tex.height
         atlas_data.add_texture(tex)
 
     parser = get_parser(args['output_data_type'])
@@ -135,6 +149,8 @@ def parse_args():
     arg_parser.add_argument('-a', '--packing-algorithm', action='store', required=False, default='maxrects', choices=('ratcliff', 'maxrects'), help='The packing algorithm to use.')
     arg_parser.add_argument('-e', '--maxrects-heuristic', action='store', required=False, default='area', choices=('shortside', 'longside', 'area', 'bottomleft', 'contactpoint'), help='The packing heuristic/rule to use if the maxrects algorithm is selected.')
     arg_parser.add_argument('-s', '--maxrects-bin-size', action='store', required=False, default='1024', help='The size of atlas when using the maxrects algorithm.')
+    arg_parser.add_argument('-g', '--merge', action='store', required=False, default='all', choices=('dir','all'), help='The atlas merging mode: make one atlas per directory or merge all textures in single atlas.' )
+    arg_parser.add_argument('-p', '--padding', action='store', required=False, default=2, help='Images padding.' )
 
     args = vars(arg_parser.parse_args())
 
@@ -159,7 +175,13 @@ def main():
     atlasesPath = get_atlas_path(parser_dict['args']['res_path'])
     clear_atlas_dir(atlasesPath)
 
-    res = iterate_data_directory(parser_dict['args']['atlas_mode'], atlasesPath, textures_dir, parser_dict['args'])
+    merge = parser_dict['args']['merge']
+
+    if merge == 'dir':
+        res = iterate_data_directory(parser_dict['args']['atlas_mode'], atlasesPath, textures_dir, parser_dict['args'])
+    elif merge == 'all':
+        res = create_atlas(parser_dict['args']['atlas_mode'], textures_dir, atlasesPath, textures_dir, parser_dict['args'])
+    
     return res
 
 

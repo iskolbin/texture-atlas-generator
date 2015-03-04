@@ -2,8 +2,8 @@ import sys
 
 from packing_algorithms.texture_packer import TexturePacker
 from packing_algorithms.texture_packer import PackerError
-from math.rect import Rect
-from math.math import common_interval_length
+from xmath.rect import Rect
+from xmath.math import common_interval_length
 
 
 class FreeRectChoiceHeuristicEnum:
@@ -17,13 +17,13 @@ class TexturePackerMaxRects(TexturePacker):
     bin_height = 0
     heuristic = FreeRectChoiceHeuristicEnum.RectBestShortSideFit
 
-    def __init__(self, method, width=0, height=0):
+    def __init__(self, method, width=0, height=0, padding=0):
         TexturePacker.__init__(self)
         self.used_rect_list = []
         self.free_rect_list = []
         self.bin_width = width
         self.bin_height = height
-        self.free_rect_list.append(Rect.InitWithDim(0, 0, self.bin_width, self.bin_height))
+        self.free_rect_list.append(Rect.InitWithDim(padding, padding, self.bin_width, self.bin_height))
         self.heuristic = method
 
     def get_occupancy(self):

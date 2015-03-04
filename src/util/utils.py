@@ -33,11 +33,11 @@ def get_maxrects_heuristic(heuristic):
         raise NotImplementedError('Unknown heuristic enum encountered')
 
 
-def get_packer(algorithm_type, size=0, heuristic=""):
+def get_packer(algorithm_type, size=0, heuristic="", padding=0):
     if algorithm_type == 'ratcliff':
         return TexturePackerRatcliff()
     elif algorithm_type == 'maxrects':
-        return TexturePackerMaxRects(get_maxrects_heuristic(heuristic), int(size), int(size))
+        return TexturePackerMaxRects(get_maxrects_heuristic(heuristic), int(size), int(size), int(padding))
     else:
         raise NotImplementedError('%s is unknown or not implemented yet.' % (algorithm_type))
 

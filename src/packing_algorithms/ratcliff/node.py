@@ -1,4 +1,4 @@
-from math.rect import Rect
+from xmath.rect import Rect
 
 
 class Node:

@@ -5,7 +5,7 @@
 #
 
 from packing_algorithms.ratcliff.node import Node
-from math.math import next_power_of_two
+from xmath.math import next_power_of_two
 from packing_algorithms.texture_packer import TexturePacker
 
 
