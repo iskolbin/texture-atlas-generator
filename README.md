@@ -1,3 +1,8 @@
+# Changes
+* Added padding
+* Added recursive merging of textures in single atlas
+* Renamed math module in xmath
+
 # Texture Atlas & Image Font Generator #
 
 Texture Atlas Generator is a pipeline tool for generating texture atlases, atlas data files and image fonts for use in apps and games.  It was written for my own personal game engine but can be used in any game engine that can read xml or json.
