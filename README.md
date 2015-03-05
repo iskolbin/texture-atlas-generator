@@ -1,6 +1,8 @@
 # Changes
 * Added padding
 * Added recursive merging of textures in single atlas
+* Added trimming
+* Added scaling
 * Renamed math module in xmath
 
 # Texture Atlas & Image Font Generator #

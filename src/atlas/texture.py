@@ -2,11 +2,11 @@ from xmath.rect import Rect
 
 
 class Texture:
-    def __init__(self, width, height, name=""):
+    def __init__(self, width, height, name="", dx=0, dy=0):
         self.width = width
         self.height = height
         self.x = 0
-        self.y = 0
+        self.y = 0; self.dx = dx; self.dy = dy
         self.area = width * height
         self.flipped = False
         self.placed = False
@@ -30,7 +30,7 @@ class Texture:
         tex_dict['width'] = self.width
         tex_dict['height'] = self.height
         tex_dict['x'] = self.x
-        tex_dict['y'] = self.y
+        tex_dict['y'] = self.y; tex_dict['dx'] = self.dx; tex_dict['dy'] = self.dy
         tex_dict['flipped'] = self.flipped
         tex_dict['name'] = self.name
         return tex_dict

@@ -33,6 +33,7 @@ import os.path
 import argparse
 
 from PIL import Image
+from PIL import ImageChops
 
 from atlas.atlas_data import AtlasData
 from util.utils import get_parser
@@ -43,11 +44,31 @@ from util.utils import get_color
 from packing_algorithms.texture_packer import PackerError
 from xmath.math import next_power_of_two
 
+# http://stackoverflow.com/questions/10615901/trim-whitespace-using-pil
+def trim(im, mode,fuzz=False):
+    p = None
+    
+    if   mode == 'tl': p = im.getpixel((0, 0))
+    elif mode == 'tr': p = im.getpixel((im.width, 0))
+    elif mode == 'bl': p = im.getpixel((0, im.height))
+    elif mode == 'br': p = im.getpixel((im.width, im.height))
+    
+    bg = Image.new(im.mode, im.size, p)
+    diff = ImageChops.difference(im, bg)
+    
+    if fuzz:
+        diff = ImageChops.add(diff, diff, 2.0, -100)
+    
+    bbox = diff.getbbox()
+    if bbox:
+        return ( im.crop(bbox), bbox )
 
 def pack_atlas(args, dirPath, curr_size):
     texture_packer = get_packer(args['packing_algorithm'], curr_size, args['maxrects_heuristic'], args['padding'])
 
     pad = int(args['padding'])
+    trimming = args['trim']
+    scaling = float(args['scale'])
     index = 0
     imagesList = []
     dirList = [dirPath]
@@ -68,7 +89,16 @@ def pack_atlas(args, dirPath, curr_size):
 
             try:
                 img = Image.open(file_path)
-                texture_packer.add_texture(img.size[0]+pad, img.size[1]+pad, currPath)
+                bbox = (0,0,0,0)
+
+                if trimming != "none":  
+                    img, bbox = trim( img, trimming )
+                if scaling != 1.0:
+                    img = img.resize((int(img.size[0]*scaling), int(img.size[1]*scaling)))
+
+                # print 'Added image %s w:%d, h:%d' % ( file_path, img.size[0], img.size[1])
+
+                texture_packer.add_texture(img.size[0]+pad, img.size[1]+pad, currPath, bbox[0], bbox[1] )
                 imagesList.append((currPath, img))
                 index += 1
             except (IOError):
@@ -145,12 +175,14 @@ def parse_args():
     arg_parser.add_argument('-m', '--atlas-mode', action='store', required=False, default='RGBA', choices=('RGB', 'RGBA'), help='The bit mode of the texture atlases')
     arg_parser.add_argument('-o', '--output-data-type', action='store', required=False, default='xml', choices=('xml', 'json'), help='The file output type of the atlas dictionary')
     arg_parser.add_argument('-i', '--images-dir', action='store', required=False, default='textures', help='The directory inside the resource path to search for images to batch into texture atlases.')
-    arg_parser.add_argument('-c', '--bg-color', action='store', required=False, default='128,128,128,255', help='The background color of the unused area in the texture atlas (e.g. 255,255,255,255).')
+    arg_parser.add_argument('-c', '--bg-color', action='store', required=False, default='0,0,0,0', help='The background color of the unused area in the texture atlas (e.g. 255,255,255,255).')
     arg_parser.add_argument('-a', '--packing-algorithm', action='store', required=False, default='maxrects', choices=('ratcliff', 'maxrects'), help='The packing algorithm to use.')
     arg_parser.add_argument('-e', '--maxrects-heuristic', action='store', required=False, default='area', choices=('shortside', 'longside', 'area', 'bottomleft', 'contactpoint'), help='The packing heuristic/rule to use if the maxrects algorithm is selected.')
     arg_parser.add_argument('-s', '--maxrects-bin-size', action='store', required=False, default='1024', help='The size of atlas when using the maxrects algorithm.')
     arg_parser.add_argument('-g', '--merge', action='store', required=False, default='all', choices=('dir','all'), help='The atlas merging mode: make one atlas per directory or merge all textures in single atlas.' )
-    arg_parser.add_argument('-p', '--padding', action='store', required=False, default=2, help='Images padding.' )
+    arg_parser.add_argument('-p', '--padding', action='store', required=False, default=0, help='Images padding.' )
+    arg_parser.add_argument('-x', '--trim', action='store', required=False, default='none', choices=('node','tl','tr','bl','br'), help='Trim image.')
+    arg_parser.add_argument('-l', '--scale', action='store', required=False, default=1.0, help='The image scaling.')
 
     args = vars(arg_parser.parse_args())
 
@@ -182,6 +214,8 @@ def main():
     elif merge == 'all':
         res = create_atlas(parser_dict['args']['atlas_mode'], textures_dir, atlasesPath, textures_dir, parser_dict['args'])
     
+    print( 'Success' )
+
     return res
 
 

@@ -20,8 +20,8 @@ class TexturePackerRatcliff(TexturePacker):
         self.longestEdge = 0
         self.totalArea = 0
 
-    def add_texture(self, width, height, name=""):
-        TexturePacker.add_texture(self, width, height, name)
+    def add_texture(self, width, height, name="", dx=0, dy=0):
+        TexturePacker.add_texture(self, width, height, name, dx, dy)
         self.longestEdge = width if (width > self.longestEdge) else self.longestEdge
         self.longestEdge = height if (height > self.longestEdge) else self.longestEdge
         self.totalArea += width * height

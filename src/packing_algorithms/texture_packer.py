@@ -12,8 +12,8 @@ class TexturePacker:
     def __init__(self):
         self.texArr = []
 
-    def add_texture(self, width, height, name):
-        self.texArr.append(Texture(width, height, name))
+    def add_texture(self, width, height, name, dx=0, dy=0):
+        self.texArr.append(Texture(width, height, name, dx, dy))
 
     def get_texture(self, name):
         tex = None

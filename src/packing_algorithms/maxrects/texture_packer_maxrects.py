@@ -34,8 +34,8 @@ class TexturePackerMaxRects(TexturePacker):
 
         return float(usedSurfaceArea) / self._get_bin_area()
 
-    def add_texture(self, width, height, name):
-        TexturePacker.add_texture(self, width, height, name)
+    def add_texture(self, width, height, name, dx=0, dy=0):
+        TexturePacker.add_texture(self, width, height, name, dx, dy)
         result = None
 
         if self.heuristic == FreeRectChoiceHeuristicEnum.RectBestShortSideFit:
