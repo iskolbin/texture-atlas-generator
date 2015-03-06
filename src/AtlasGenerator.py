@@ -72,8 +72,10 @@ def pack_atlas(args, dirPath, curr_size):
     index = 0
     imagesList = []
     dirList = [dirPath]
-
-    # Open all images in the directory and add to the packer input data structure.
+		
+    visited = {}
+    
+		# Open all images in the directory and add to the packer input data structure.
     while len(dirList) > 0:
         dirPath = dirList.pop()
         childDirs = os.listdir(dirPath)
@@ -84,8 +86,11 @@ def pack_atlas(args, dirPath, curr_size):
                 continue
             
             if os.path.isdir(file_path):
+              if visited.get( 'file_path' ) == None:
                 dirList.append( file_path )
-                continue
+                visited['dirList'] = True
+
+              continue
 
             try:
                 img = Image.open(file_path)
